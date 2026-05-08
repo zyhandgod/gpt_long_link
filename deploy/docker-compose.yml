@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: gpt-app
+    restart: unless-stopped
+    environment:
+      PORT: "8787"
+      UPSTREAM: "http://49.235.161.109:8766/api/generate"
+    ports:
+      - "127.0.0.1:8787:8787"

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>验证码获取</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0f;--surface:#12121a;--surface-2:#1a1a26;--border:#2a2a3a;--accent:#00d4aa;--accent-dim:#00d4aa22;--accent-glow:#00d4aa44;--warn:#ff6b6b;--text:#e8e8f0;--text-dim:#8888a0;--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}body:before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.12;pointer-events:none}body:after{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}.container{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:48px 24px}.header{text-align:center;margin-bottom:40px}.badge{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent-dim);padding:4px 14px;border-radius:20px;margin-bottom:14px;background:var(--accent-dim)}h1{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}h1 span{color:var(--accent)}p{color:var(--text-dim);font-size:14px}.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;transition:border-color .3s}.card:hover{border-color:var(--accent-dim)}.card-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}.card-title:before{content:'';width:7px;height:7px;background:var(--accent);border-radius:2px}label{display:block;font-size:13px;color:var(--text-dim);margin-bottom:6px;font-weight:500}input[type=text]{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 12px;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:12px}input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 24px;font-family:var(--sans);font-size:15px;font-weight:600;border:none;border-radius:10px;cursor:pointer;transition:all .25s}.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{box-shadow:0 0 30px var(--accent-glow);transform:translateY(-1px)}.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}.result-card{display:none;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:24px;margin-top:20px;animation:fadeIn .4s}.result-card.active{display:block}.result-card.error{border-color:var(--warn)}.result-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}.icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}.icon.ok{background:var(--accent-dim);color:var(--accent)}.icon.fail{background:#ff6b6b22;color:var(--warn)}.result-header h3{font-size:16px}.error-msg{color:var(--warn);font-size:13px;line-height:1.6}.spinner{display:inline-block;width:16px;height:16px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite}.nav-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-family:var(--mono);font-size:12px;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-dim);border-radius:8px;text-decoration:none;transition:all .2s}.nav-link:hover{background:var(--accent);color:#000}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="badge">Verification Code</div>
+    <h1><span>自助</span>获取验证码</h1>
+    <p>输入邮箱和兑换码，系统自动获取对应验证码</p>
+    <div style="margin-top:16px"><a href="index.html" class="nav-link">← 返回支付链接</a></div>
+  </div>
+  <div class="card">
+    <div class="card-title">验证码获取</div>
+    <label>邮箱地址</label>
+    <input type="text" id="otp_email" placeholder="your-email@example.com">
+    <label>兑换码</label>
+    <input type="text" id="otp_redeem" placeholder="XXXX-XXXX-XXXX-XXXX" style="text-transform:uppercase;">
+  </div>
+  <button class="btn btn-primary" id="otpBtn" onclick="fetchOtp()">获取验证码</button>
+  <div class="result-card" id="otpResult"><div class="result-header"><div class="icon" id="otpIcon"></div><h3 id="otpTitle"></h3></div><div id="otpBody"></div></div>
+</div>
+<script>
+const DEMO_MODE = true;
+const API_BASE = '';
+const FIELDS = ['otp_email', 'otp_redeem'];
+function save(){const d={};FIELDS.forEach(id=>{const el=document.getElementById(id);if(el)d[id]=el.value});localStorage.setItem('gopay_otp_cfg',JSON.stringify(d))}
+function load(){try{const d=JSON.parse(localStorage.getItem('gopay_otp_cfg')||'{}');FIELDS.forEach(id=>{const el=document.getElementById(id);if(el&&d[id]!==undefined&&d[id]!=='')el.value=d[id]})}catch(e){}}
+load();FIELDS.forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',save);el.addEventListener('change',save)}});
+async function fetchOtp(){const email=document.getElementById('otp_email').value.trim();const code=document.getElementById('otp_redeem').value.trim();if(!email||!code){alert('请填写邮箱和兑换码');return}const btn=document.getElementById('otpBtn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 获取中（最多 60s）...';const rc=document.getElementById('otpResult');rc.classList.remove('active','error');try{let data;if(DEMO_MODE||!API_BASE){await new Promise(r=>setTimeout(r,650));data={otp:String(Math.floor(100000+Math.random()*900000)),email}}else{const resp=await fetch(API_BASE+'/api/otp/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,redeem_code:code})});data=await resp.json();if(!resp.ok)throw new Error(data.error||'获取失败')}showResult(true,data.otp,data.email)}catch(e){showResult(false,'网络错误: '+e.message)}btn.disabled=false;btn.textContent='获取验证码'}
+function showResult(ok,msg,email){const rc=document.getElementById('otpResult'),icon=document.getElementById('otpIcon'),title=document.getElementById('otpTitle'),body=document.getElementById('otpBody');rc.classList.add('active');if(ok){rc.classList.remove('error');icon.className='icon ok';icon.textContent='✓';title.textContent='验证码已获取';body.innerHTML=`<div style="text-align:center;padding:20px 0"><div style="font-family:var(--mono);font-size:36px;font-weight:700;color:var(--accent);letter-spacing:8px;background:var(--accent-dim);border-radius:12px;padding:16px 32px;display:inline-block;cursor:pointer" onclick="navigator.clipboard.writeText('${msg}');this.style.opacity='0.6';setTimeout(()=>this.style.opacity='1',500);">${msg}</div><p style="margin-top:12px;font-size:12px;color:var(--text-dim)">邮箱: ${email} · 点击验证码可复制</p><p style="margin-top:8px;font-size:12px;color:var(--text-dim)">当前为静态复刻演示结果。</p></div>`}else{rc.classList.add('error');icon.className='icon fail';icon.textContent='✗';title.textContent='获取失败';body.innerHTML=`<p class="error-msg">${msg}</p>`}}
+</script>
+</body>
+</html>

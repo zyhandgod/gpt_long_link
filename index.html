@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>订阅支付链接生成</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface-2: #1a1a26;
+    --border: #2a2a3a;
+    --accent: #00d4aa;
+    --accent-dim: #00d4aa22;
+    --accent-glow: #00d4aa44;
+    --warn: #ff6b6b;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .container {
+    position: relative; z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+  .header { text-align: center; margin-bottom: 40px; }
+  .header .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    background: var(--accent-dim);
+  }
+  .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .header h1 span { color: var(--accent); }
+  .header p { color: var(--text-dim); font-size: 14px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: var(--accent-dim); }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  textarea, input[type="text"], select {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 12px;
+  }
+  textarea { resize: vertical; min-height: 90px; }
+  textarea:focus, input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  select { cursor: pointer; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  .help-text { font-size: 12px; color: var(--text-dim); margin-top: -6px; margin-bottom: 12px; }
+  .help-text a { color: var(--accent); text-decoration: none; }
+  .help-text a:hover { text-decoration: underline; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+    padding: 14px 24px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { box-shadow: 0 0 30px var(--accent-glow); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .result-card {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+    animation: fadeIn 0.4s;
+  }
+  .result-card.active { display: block; }
+  .result-card.error { border-color: var(--warn); }
+  .result-card .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .result-card .result-header .icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+  }
+  .result-card .result-header .icon.ok { background: var(--accent-dim); color: var(--accent); }
+  .result-card .result-header .icon.fail { background: #ff6b6b22; color: var(--warn); }
+  .result-card .result-header h3 { font-size: 16px; }
+
+  .link-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+    margin-bottom: 14px;
+  }
+  .link-block-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .link-block-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .link-actions { display: flex; gap: 6px; }
+  .link-url-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--accent);
+    word-break: break-all;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    user-select: all;
+  }
+  .link-url-block:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .meta-row {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .meta-key {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+  .meta-val { word-break: break-all; }
+  .copy-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-size: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-flex; align-items: center;
+  }
+  .copy-btn:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+  .copy-btn.copied { background: var(--accent); color: #000; border-color: var(--accent); }
+  .open-btn { color: var(--accent); }
+
+  .error-msg { color: var(--warn); font-size: 13px; line-height: 1.6; }
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  .notice {
+    margin-top: 10px;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .nav-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .nav-link:hover { background: var(--accent); color: #000; }
+  @media (max-width: 560px) {
+    .row { flex-direction: column; gap: 0; }
+    .link-block-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .link-actions { width: 100%; }
+    .link-actions .copy-btn { flex: 1; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="badge">Payment Link Generator</div>
+    <h1><span>ChatGPT Plus</span> 支付链接生成</h1>
+    <p>手动粘贴 Token，自动生成订阅支付链接</p>
+    <div style="margin-top:16px;">
+      <a href="otp.html" class="nav-link">→ 验证码获取</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Access Token</div>
+    <label>粘贴 Access Token 或完整 Session JSON</label>
+    <textarea id="token" placeholder='eyJhbGci... 或粘贴 chatgpt.com/api/auth/session 的完整 JSON'></textarea>
+    <p class="help-text">
+      在 <a href="https://chatgpt.com/api/auth/session" target="_blank" rel="noreferrer">chatgpt.com/api/auth/session</a> 获取
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">支付配置</div>
+    <div class="row">
+      <div>
+        <label>账单国家</label>
+        <select id="billing_country">
+          <option value="ID">ID - 印度尼西亚 (GoPay)</option>
+          <option value="US">US - 美国</option>
+          <option value="JP">JP - 日本</option>
+          <option value="SG">SG - 新加坡</option>
+          <option value="DE">DE - 德国</option>
+        </select>
+      </div>
+      <div>
+        <label>货币</label>
+        <select id="billing_currency">
+          <option value="IDR">IDR - 印尼卢比</option>
+          <option value="USD">USD - 美元</option>
+          <option value="JPY">JPY - 日元</option>
+          <option value="SGD">SGD - 新币</option>
+          <option value="EUR">EUR - 欧元</option>
+        </select>
+      </div>
+    </div>
+    <label style="display:none;">代理 (可选)</label>
+    <input type="text" id="proxy" style="display:none;" placeholder="socks5://127.0.0.1:18899 或留空直连">
+    <p class="notice">粘贴 Token 后点生成即可。印尼区可得 GoPay 支付页。</p>
+  </div>
+
+  <button class="btn btn-primary" id="genBtn" onclick="generate()">
+    生成支付链接
+  </button>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="icon" id="resultIcon"></div>
+      <h3 id="resultTitle"></h3>
+    </div>
+    <div id="resultBody"></div>
+  </div>
+</div>
+
+<script>
+// API_BASE 留空代表同源（当页面被 server.py 托管时），否则指向你的后端
+const API_BASE = '';
+const DEMO_MODE = false;
+
+async function generate() {
+  const token = document.getElementById('token').value.trim();
+  if (!token) { alert('请粘贴 Access Token'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 生成中...';
+
+  const resultCard = document.getElementById('resultCard');
+  resultCard.classList.remove('active', 'error');
+
+  const payload = {
+    token,
+    billing_country: document.getElementById('billing_country').value,
+    billing_currency: document.getElementById('billing_currency').value,
+    proxy: document.getElementById('proxy').value.trim(),
+  };
+
+  try {
+    let data;
+    if (DEMO_MODE) {
+      await sleep(650);
+      data = buildDemoResponse(payload);
+    } else {
+      const resp = await fetch((API_BASE || '') + '/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      data = await resp.json();
+      if (!resp.ok) {
+        const detail = data.detail ? ' | ' + JSON.stringify(data.detail) : '';
+        throw new Error((data.error || '请求失败') + detail);
+      }
+      if (!data.link && !data.links) throw new Error('后端未返回 link/links 字段');
+    }
+    showLinks(data);
+  } catch (e) {
+    showError(e.message || String(e));
+  }
+
+  btn.disabled = false;
+  btn.textContent = '生成支付链接';
+}
+
+function buildDemoResponse(payload) {
+  const csId = 'cs_test_' + randomId(28);
+  return {
+    cs_id: csId,
+    link: `https://chat.openai.com/backend-api/payments/checkout/${csId}?billing_country=${payload.billing_country}&billing_currency=${payload.billing_currency}`,
+  };
+}
+
+function showLinks(data) {
+  const card = document.getElementById('resultCard');
+  const icon = document.getElementById('resultIcon');
+  const title = document.getElementById('resultTitle');
+  const body = document.getElementById('resultBody');
+
+  icon.className = 'icon ok';
+  icon.textContent = '✓';
+  title.textContent = '支付链接已生成';
+  card.classList.remove('error');
+  card.classList.add('active');
+
+  const links = data.links || {};
+  const stripeExt = links.stripe_external || data.link || '';
+  const chatgptVerify = links.chatgpt_verify || '';
+  const openaiFull = links.openai_full || '';
+
+  function linkRow(label, url) {
+    if (!url) return '';
+    return `
+    <div class="link-block" style="margin-bottom:12px;">
+      <div class="link-block-header">
+        <span class="link-block-label">${label}</span>
+        <div class="link-actions">
+          <button class="copy-btn" onclick="copyLink(this.closest('.link-block').querySelector('.link-url-block').textContent, this)">复制</button>
+          <a class="copy-btn open-btn" href="${url}" target="_blank" rel="noreferrer">打开</a>
+        </div>
+      </div>
+      <div class="link-url-block" title="点击复制" onclick="copyText(this)">${url}</div>
+    </div>`;
+  }
+
+  body.innerHTML =
+    linkRow('Stripe 外部（推荐）', stripeExt) +
+    linkRow('ChatGPT 短链', chatgptVerify) +
+    linkRow('OpenAI 长链', openaiFull) +
+    `<div class="meta-row">
+      <span class="meta-key">cs_id</span>
+      <span class="meta-val">${escapeHtml(data.cs_id || '-')}</span>
+    </div>
+    <p class="notice">推荐打开「Stripe 外部」链接进行支付。</p>`;
+}
+
+function showError(msg) {
+  const card = document.getElementById('resultCard');
+  const icon = document.getElementById('resultIcon');
+  const title = document.getElementById('resultTitle');
+  const body = document.getElementById('resultBody');
+
+  icon.className = 'icon fail';
+  icon.textContent = '✗';
+  title.textContent = '生成失败';
+  card.classList.add('active', 'error');
+  body.innerHTML = `<p class="error-msg">${escapeHtml(msg)}</p>`;
+}
+
+function copyLink(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '复制';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function copyText(el) { navigator.clipboard.writeText(el.textContent); }
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function randomId(len) {
+  const s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({ length: len }, () => s[Math.floor(Math.random() * s.length)]).join('');
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+}
+function escapeAttr(s) {
+  return String(s).replace(/[\\']/g, m => m === '\\' ? '\\\\' : "\\'");
+}
+
+const SAVE_FIELDS = ['token', 'proxy', 'billing_country', 'billing_currency'];
+function saveAll() {
+  const d = {};
+  SAVE_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) d[id] = el.value; });
+  localStorage.setItem('gopay_panel_cfg', JSON.stringify(d));
+}
+function loadAll() {
+  try {
+    const d = JSON.parse(localStorage.getItem('gopay_panel_cfg') || '{}');
+    SAVE_FIELDS.forEach(id => { const el = document.getElementById(id); if (el && d[id] !== undefined && d[id] !== '') el.value = d[id]; });
+  } catch(e) {}
+}
+loadAll();
+SAVE_FIELDS.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) { el.addEventListener('input', saveAll); el.addEventListener('change', saveAll); }
+});
+
+document.getElementById('billing_country').addEventListener('change', function() {
+  const map = { ID: 'IDR', US: 'USD', JP: 'JPY', SG: 'SGD', DE: 'EUR' };
+  document.getElementById('billing_currency').value = map[this.value] || 'USD';
+  saveAll();
+});
+</script>
+
+</body>
+</html>

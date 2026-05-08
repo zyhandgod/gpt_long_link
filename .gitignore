@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.DS_Store
+.vscode/
+*.log
+
+# 临时/敏感文件
+*.tmp
+*.token*
+probe.json
