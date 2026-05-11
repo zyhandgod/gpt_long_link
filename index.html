@@ -247,6 +247,21 @@
     gap: 10px;
     margin-top: 12px;
   }
+  .bookmarklet-box {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--gray-3);
+    border-radius: 8px;
+    background: rgba(255,255,255,.72);
+  }
+  .bookmarklet-box .btn {
+    margin-top: 8px;
+    text-decoration: none;
+  }
+  .bookmarklet-box code {
+    font-family: var(--font-code);
+    color: var(--gray-8);
+  }
   .btn-secondary {
     background: var(--white);
     color: var(--green);
@@ -506,6 +521,10 @@
     <div class="plugin-actions">
       <a class="btn btn-primary" href="/chatgpt-long-link.user.js">安装油猴插件</a>
       <a class="btn btn-secondary" href="https://chatgpt.com/" target="_blank" rel="noreferrer">打开 ChatGPT 执行</a>
+    </div>
+    <div class="bookmarklet-box">
+      <p class="plugin-intro">不用油猴时，把下面按钮拖到浏览器书签栏；以后在 <code>chatgpt.com</code> 页面点这个书签即可运行 <code>aaa.txt</code>。</p>
+      <a class="btn btn-secondary" href="javascript:(async()=>{const u='https://gpt.mooizz.com/aaa.txt?v='+Date.now();eval(await(await fetch(u,{cache:'no-store'})).text())})()">运行支付面板</a>
     </div>
     <p class="notice">如果点击安装没有弹出安装页，请先确认 Tampermonkey 已启用。</p>
   </div>
