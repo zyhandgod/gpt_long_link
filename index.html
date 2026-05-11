@@ -217,6 +217,64 @@
   .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(0,185,107,0.2); }
   .btn-primary:disabled { background: #a8e6c3; box-shadow: none; cursor: not-allowed; transform: none; }
 
+  .payment-section {
+    padding: 16px;
+    border: 1px solid var(--gray-3);
+    border-radius: 10px;
+    background: var(--gray-1);
+    margin-bottom: 16px;
+  }
+  .payment-section.manual { background: #fff; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-9);
+  }
+  .section-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .section-desc {
+    font-size: 12px;
+    color: var(--gray-7);
+    margin: -4px 0 12px;
+  }
+  .quick-plans {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 2px 0 0;
+  }
+  .quick-plan {
+    border: 1px solid var(--gray-3);
+    background: var(--white);
+    color: var(--gray-8);
+    border-radius: 8px;
+    padding: 9px 8px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .quick-plan:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-bg);
+    transform: translateY(-1px);
+  }
+
   .result-card {
     display: none;
     background: var(--white);
@@ -366,7 +424,7 @@
 <div class="container">
   <div class="page-title">
     <h1>ChatGPT Plus 支付链接生成</h1>
-    <p>粘贴 Token，一键生成 Stripe 订阅支付链接</p>
+    <p>不用油猴，粘贴 Token 后直接在本页面生成 Stripe 订阅支付链接</p>
     <div class="divider"></div>
   </div>
 
@@ -381,31 +439,57 @@
 
   <div class="card">
     <div class="card-title">支付配置</div>
-    <div class="row">
-      <div>
-        <label>账单国家</label>
-        <select id="billing_country">
-          <option value="ID">ID - 印度尼西亚 (GoPay)</option>
-          <option value="US">US - 美国</option>
-          <option value="JP">JP - 日本</option>
-          <option value="SG">SG - 新加坡</option>
-          <option value="DE">DE - 德国</option>
-        </select>
+
+    <div class="payment-section">
+      <div class="section-head">
+        <div class="section-title">方式一：快捷方案</div>
+        <span class="section-badge">点击即生成</span>
       </div>
-      <div>
-        <label>货币</label>
-        <select id="billing_currency">
-          <option value="IDR">IDR - 印尼卢比</option>
-          <option value="USD">USD - 美元</option>
-          <option value="JPY">JPY - 日元</option>
-          <option value="SGD">SGD - 新币</option>
-          <option value="EUR">EUR - 欧元</option>
-        </select>
+      <p class="section-desc">粘贴 Token 后，直接选择常用方案，会自动匹配国家和货币并开始生成。</p>
+      <div class="quick-plans">
+        <button class="quick-plan" type="button" onclick="setPlan('ID','IDR', true)">GoPay 印尼</button>
+        <button class="quick-plan" type="button" onclick="setPlan('DE','EUR', true)">PayPal 德国</button>
+        <button class="quick-plan" type="button" onclick="setPlan('FR','EUR', true)">PayPal 欧区</button>
+        <button class="quick-plan" type="button" onclick="setPlan('GB','GBP', true)">PayPal 英国</button>
       </div>
     </div>
+
+    <div class="payment-section manual">
+      <div class="section-head">
+        <div class="section-title">方式二：手动配置</div>
+        <span class="section-badge">底部按钮生成</span>
+      </div>
+      <p class="section-desc">需要自定义地区时，在这里选择账单国家和货币，然后点击页面底部「生成支付链接」。</p>
+      <div class="row">
+        <div>
+          <label>账单国家</label>
+          <select id="billing_country">
+            <option value="ID">ID - 印度尼西亚 (GoPay)</option>
+            <option value="US">US - 美国</option>
+            <option value="JP">JP - 日本</option>
+            <option value="SG">SG - 新加坡</option>
+            <option value="DE">DE - 德国</option>
+            <option value="FR">FR - 法国/欧区</option>
+            <option value="GB">GB - 英国</option>
+          </select>
+        </div>
+        <div>
+          <label>货币</label>
+          <select id="billing_currency">
+            <option value="IDR">IDR - 印尼卢比</option>
+            <option value="USD">USD - 美元</option>
+            <option value="JPY">JPY - 日元</option>
+            <option value="SGD">SGD - 新币</option>
+            <option value="EUR">EUR - 欧元</option>
+            <option value="GBP">GBP - 英镑</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <label style="display:none;">代理 (可选)</label>
     <input type="text" id="proxy" style="display:none;" placeholder="socks5://127.0.0.1:18899 或留空直连">
-    <p class="notice">粘贴 Token 后点击生成即可。印尼区可得 GoPay 支付页。</p>
+    <p class="notice">浏览器限制下，本站不能自动读取 chatgpt.com 登录态，请先粘贴 Token。</p>
   </div>
 
   <button class="btn btn-primary" id="genBtn" onclick="generate()">
@@ -576,8 +660,16 @@ SAVE_FIELDS.forEach(id => {
   if (el) { el.addEventListener('input', saveAll); el.addEventListener('change', saveAll); }
 });
 
+
+function setPlan(country, currency, autoGenerate = false) {
+  document.getElementById('billing_country').value = country;
+  document.getElementById('billing_currency').value = currency;
+  saveAll();
+  if (autoGenerate) generate();
+}
+
 document.getElementById('billing_country').addEventListener('change', function() {
-  const map = { ID: 'IDR', US: 'USD', JP: 'JPY', SG: 'SGD', DE: 'EUR' };
+  const map = { ID: 'IDR', US: 'USD', JP: 'JPY', SG: 'SGD', DE: 'EUR', FR: 'EUR', GB: 'GBP' };
   document.getElementById('billing_currency').value = map[this.value] || 'USD';
   saveAll();
 });
