@@ -642,6 +642,36 @@
 // API_BASE 留空代表同源（当页面被 server.py 托管时），否则指向你的后端
 const API_BASE = '';
 const DEMO_MODE = false;
+const CHECKOUT_PAYLOADS = {
+  ID_IDR: {
+    plan_name: 'chatgptplusplan',
+    billing_details: { country: 'ID', currency: 'IDR' },
+    cancel_url: 'https://chatgpt.com/#pricing',
+    promo_campaign: { promo_campaign_id: 'plus-1-month-free', is_coupon_from_query_param: false },
+    checkout_ui_mode: 'hosted',
+  },
+  DE_EUR: {
+    plan_name: 'chatgptplusplan',
+    billing_details: { country: 'DE', currency: 'EUR' },
+    cancel_url: 'https://chatgpt.com/#pricing',
+    promo_campaign: { promo_campaign_id: 'plus-1-month-free', is_coupon_from_query_param: false },
+    checkout_ui_mode: 'hosted',
+  },
+  FR_EUR: {
+    plan_name: 'chatgptplusplan',
+    billing_details: { country: 'FR', currency: 'EUR' },
+    cancel_url: 'https://chatgpt.com/#pricing',
+    promo_campaign: { promo_campaign_id: 'plus-1-month-free', is_coupon_from_query_param: false },
+    checkout_ui_mode: 'hosted',
+  },
+  GB_GBP: {
+    plan_name: 'chatgptplusplan',
+    billing_details: { country: 'GB', currency: 'GBP' },
+    cancel_url: 'https://chatgpt.com/#pricing',
+    promo_campaign: { promo_campaign_id: 'plus-1-month-free', is_coupon_from_query_param: false },
+    checkout_ui_mode: 'hosted',
+  },
+};
 
 async function generate(options = {}) {
   const token = getAccessTokenInput();
@@ -667,6 +697,7 @@ async function generate(options = {}) {
     token,
     billing_country: document.getElementById('billing_country').value,
     billing_currency: document.getElementById('billing_currency').value,
+    checkout_payload: buildCheckoutPayload(),
     proxy: document.getElementById('proxy').value.trim(),
   };
 
@@ -757,6 +788,19 @@ async function copyAccessToken() {
 function quickGenerate(country, currency, label) {
   setPlan(country, currency, false);
   generate({ redirectOnSuccess: true, label });
+}
+
+function buildCheckoutPayload() {
+  const country = document.getElementById('billing_country').value;
+  const currency = document.getElementById('billing_currency').value;
+  const key = `${country}_${currency}`;
+  return CHECKOUT_PAYLOADS[key] || {
+    plan_name: 'chatgptplusplan',
+    billing_details: { country, currency },
+    cancel_url: 'https://chatgpt.com/#pricing',
+    promo_campaign: { promo_campaign_id: 'plus-1-month-free', is_coupon_from_query_param: false },
+    checkout_ui_mode: 'hosted',
+  };
 }
 
 function buildDemoResponse(payload) {
