@@ -504,29 +504,19 @@
 <div class="container">
   <div class="page-title">
     <h1>ChatGPT Plus 支付链接生成</h1>
-    <p>推荐安装油猴插件，在 ChatGPT 页面内执行原版生成逻辑</p>
+    <p>复制脚本代码，在 ChatGPT 控制台内执行原版生成逻辑</p>
     <div class="divider"></div>
   </div>
 
   <div class="card plugin-card">
-    <div class="card-title">油猴插件 <span class="tag">推荐</span></div>
+    <div class="card-title">控制台脚本 <span class="tag">推荐</span></div>
     <p class="plugin-intro">
-      这个方式会直接在 <code>chatgpt.com</code> 页面内执行 <code>a.txt</code> 的原版逻辑，浏览器会自动携带 ChatGPT 登录态，和油猴代码生成结果一致。
+      复制脚本后粘贴到 <code>chatgpt.com</code> 的 Console 执行，浏览器会自动携带 ChatGPT 登录态，和原版代码生成结果一致。
     </p>
-    <div class="plugin-steps">
-      <span>1. 先安装 Tampermonkey / 篡改猴浏览器扩展。</span>
-      <span>2. 点击下面「安装油猴插件」，确认安装脚本。</span>
-      <span>3. 打开 ChatGPT 页面，右上角会出现快捷支付面板，直接执行生成。</span>
-    </div>
-    <div class="plugin-actions">
-      <a class="btn btn-primary" href="/chatgpt-long-link.user.js">安装油猴插件</a>
-      <a class="btn btn-secondary" href="https://chatgpt.com/" target="_blank" rel="noreferrer">打开 ChatGPT 执行</a>
-    </div>
     <div class="bookmarklet-box">
-      <p class="plugin-intro">不用油猴时，把下面按钮拖到浏览器书签栏，不要在本站直接点击；以后打开 <code>chatgpt.com</code> 后点这个书签即可运行 <code>aaa.txt</code>。</p>
-      <a class="btn btn-secondary" href="javascript:(async()=>{const u='https://gpt.mooizz.com/aaa.txt?v='+Date.now();eval(await(await fetch(u,{cache:'no-store'})).text())})()" onclick="alert('请把这个按钮拖到浏览器书签栏；然后打开 chatgpt.com，在 ChatGPT 页面点书签运行。不要在本站直接点击。');return false;">拖到书签栏：运行支付面板</a>
+      <button class="btn btn-primary" type="button" id="consoleCopyBtn" disabled>正在生成脚本代码...</button>
+      <code id="bookmarkletHint">生成后点击复制，然后到 ChatGPT 控制台粘贴执行。</code>
     </div>
-    <p class="notice">如果点击安装没有弹出安装页，请先确认 Tampermonkey 已启用。</p>
   </div>
 
   <div class="card">
@@ -576,7 +566,7 @@
 
     <label style="display:none;">代理 (可选)</label>
     <input type="text" id="proxy" style="display:none;" placeholder="socks5://127.0.0.1:18899 或留空直连">
-    <p class="notice">推荐优先使用上方油猴插件；网页生成仅作为备用方式。</p>
+    <p class="notice">推荐优先使用上方控制台脚本；网页生成仅作为备用方式。</p>
   </div>
 
   <button class="btn btn-primary" id="genBtn" onclick="generate()">
@@ -784,6 +774,8 @@ function escapeAttr(s) {
   return String(s).replace(/[\\']/g, m => m === '\\' ? '\\\\' : "\\'");
 }
 
+let consoleLauncherCode = '';
+
 const SAVE_FIELDS = ['token', 'proxy', 'billing_country', 'billing_currency'];
 function saveAll() {
   const d = {};
@@ -800,6 +792,47 @@ loadAll();
 SAVE_FIELDS.forEach(id => {
   const el = document.getElementById(id);
   if (el) { el.addEventListener('input', saveAll); el.addEventListener('change', saveAll); }
+});
+
+async function prepareBookmarklet() {
+  const hint = document.getElementById('bookmarkletHint');
+  const consoleBtn = document.getElementById('consoleCopyBtn');
+  if (!consoleBtn) return;
+
+  try {
+    const res = await fetch('/aaa.txt', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const source = await res.text();
+    const runnable = source
+      .replace(/^\/\/ ==UserScript==[\s\S]*?\/\/ ==\/UserScript==\s*/, '')
+      .replace(
+        /tip\(copied \? "长链接已复制，正在跳转\.\.\." : "链接生成成功，正在跳转\.\.\."\);\s*location\.assign\(hostedUrl\);/,
+        'tip(copied ? "长链接已复制，已打开新页面..." : "链接生成成功，已打开新页面...");\n            window.open(hostedUrl, "_blank", "noopener,noreferrer");'
+      )
+      .trim();
+    const runnableExpr = runnable.replace(/;\s*$/, '');
+    const wrapped = `(()=>{try{console.log("[gopay-console] start",location.href);return ${runnableExpr};}catch(e){console.error("[gopay-console]",e);alert("支付面板启动失败："+(e&&e.message?e.message:e));}})()`;
+    consoleLauncherCode = `void ${wrapped}`;
+    consoleBtn.disabled = false;
+    consoleBtn.textContent = '复制控制台代码';
+    if (hint) hint.textContent = `已生成控制台脚本（${Math.ceil(consoleLauncherCode.length / 1024)}KB）。复制后到 ChatGPT 控制台粘贴执行。`;
+  } catch (e) {
+    consoleBtn.textContent = '脚本生成失败';
+    if (hint) hint.textContent = `请刷新页面重试：${e.message}`;
+  }
+}
+prepareBookmarklet();
+
+document.getElementById('consoleCopyBtn')?.addEventListener('click', async function() {
+  if (!consoleLauncherCode) {
+    alert('脚本还在生成，请稍等 1 秒后再试。');
+    return;
+  }
+
+  await copyRawText(consoleLauncherCode);
+  this.textContent = '已复制，去 ChatGPT 控制台粘贴';
+  setTimeout(() => { this.textContent = '复制控制台代码'; }, 2600);
 });
 
 
