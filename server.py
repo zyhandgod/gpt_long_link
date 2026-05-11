@@ -1,9 +1,9 @@
 """
-ChatGPT Plus 支付长链生成。
+ChatGPT Plus 支付长链生成 - 纯转发网关
 
-后端按油猴脚本同款 payload 直接请求 ChatGPT 官方 checkout 接口，避免中间网关改写参数。
+转发到上游：http://49.235.161.109:8766/api/generate
+上游已落地海外并处理好地区逻辑，能正确返回各区域的 Stripe 支付长链（含印尼 GoPay）。
 """
-import json
 import os
 import pathlib
 
@@ -15,52 +15,7 @@ ROOT = pathlib.Path(__file__).parent
 app = Flask(__name__, static_folder=None)
 CORS(app)
 
-CHECKOUT_URL = os.environ.get(
-    "CHECKOUT_URL",
-    "https://chatgpt.com/backend-api/payments/checkout",
-)
-PAYLOADS = {
-    ("ID", "IDR"): {
-        "plan_name": "chatgptplusplan",
-        "billing_details": {"country": "ID", "currency": "IDR"},
-        "cancel_url": "https://chatgpt.com/#pricing",
-        "promo_campaign": {
-            "promo_campaign_id": "plus-1-month-free",
-            "is_coupon_from_query_param": False,
-        },
-        "checkout_ui_mode": "hosted",
-    },
-    ("DE", "EUR"): {
-        "plan_name": "chatgptplusplan",
-        "billing_details": {"country": "DE", "currency": "EUR"},
-        "cancel_url": "https://chatgpt.com/#pricing",
-        "promo_campaign": {
-            "promo_campaign_id": "plus-1-month-free",
-            "is_coupon_from_query_param": False,
-        },
-        "checkout_ui_mode": "hosted",
-    },
-    ("FR", "EUR"): {
-        "plan_name": "chatgptplusplan",
-        "billing_details": {"country": "FR", "currency": "EUR"},
-        "cancel_url": "https://chatgpt.com/#pricing",
-        "promo_campaign": {
-            "promo_campaign_id": "plus-1-month-free",
-            "is_coupon_from_query_param": False,
-        },
-        "checkout_ui_mode": "hosted",
-    },
-    ("GB", "GBP"): {
-        "plan_name": "chatgptplusplan",
-        "billing_details": {"country": "GB", "currency": "GBP"},
-        "cancel_url": "https://chatgpt.com/#pricing",
-        "promo_campaign": {
-            "promo_campaign_id": "plus-1-month-free",
-            "is_coupon_from_query_param": False,
-        },
-        "checkout_ui_mode": "hosted",
-    },
-}
+UPSTREAM = os.environ.get("UPSTREAM", "http://49.235.161.109:8766/api/generate")
 
 
 @app.route("/")
@@ -76,98 +31,46 @@ def static_files(filename):
     return ("Not Found", 404)
 
 
-def extract_token(raw):
-    if not isinstance(raw, str):
-        return ""
-    raw = raw.strip()
-    if not raw:
-        return ""
-    try:
-        data = json.loads(raw)
-    except ValueError:
-        return raw
-    if isinstance(data, dict):
-        return data.get("accessToken") or data.get("token") or raw
-    return raw
-
-
-def normalize_cookie(raw):
-    if not isinstance(raw, str):
-        return ""
-    raw = raw.strip()
-    if raw.lower().startswith("cookie:"):
-        raw = raw.split(":", 1)[1].strip()
-    return raw
-
-
-def checkout_payload_from(body):
-    payload = body.get("checkout_payload")
-    if isinstance(payload, dict):
-        return payload
-
-    country = body.get("billing_country") or "ID"
-    currency = body.get("billing_currency") or "IDR"
-    return PAYLOADS.get((country, currency)) or {
-        "plan_name": "chatgptplusplan",
-        "billing_details": {"country": country, "currency": currency},
-        "cancel_url": "https://chatgpt.com/#pricing",
-        "promo_campaign": {
-            "promo_campaign_id": "plus-1-month-free",
-            "is_coupon_from_query_param": False,
-        },
-        "checkout_ui_mode": "hosted",
-    }
-
-
 @app.post("/api/generate")
 def api_generate():
     body = request.get_json(silent=True) or {}
-    token = extract_token(body.get("token", ""))
-    if not token:
-        return jsonify({"error": "缺少 Access Token"}), 400
-
-    chatgpt_cookie = normalize_cookie(body.get("chatgpt_cookie", ""))
-    checkout_payload = checkout_payload_from(body)
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Origin": "https://chatgpt.com",
-        "Referer": "https://chatgpt.com/",
-        "User-Agent": (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/147.0.0.0 Safari/537.36"
-        ),
-    }
-    if chatgpt_cookie:
-        headers["Cookie"] = chatgpt_cookie
+    body.setdefault("proxy", "")
 
     try:
         resp = requests.post(
-            CHECKOUT_URL,
-            json=checkout_payload,
-            headers=headers,
+            UPSTREAM,
+            json=body,
+            headers={
+                "Content-Type": "application/json",
+                "Origin": "http://49.235.161.109:8766",
+                "Referer": "http://49.235.161.109:8766/",
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/147.0.0.0 Safari/537.36"
+                ),
+            },
             timeout=40,
         )
     except requests.RequestException as e:
-        return jsonify({"error": f"ChatGPT checkout 网络错误: {e}"}), 502
+        return jsonify({"error": f"上游网络错误: {e}"}), 502
 
     try:
         data = resp.json()
     except ValueError:
-        return jsonify({
-            "error": "ChatGPT checkout 返回非 JSON",
-            "status": resp.status_code,
-            "content_type": resp.headers.get("content-type", ""),
-            "raw": resp.text[:500],
-            "hint": "油猴脚本会随 credentials: include 自动带上 ChatGPT Cookie；独立网页需要额外粘贴同浏览器的 Cookie。",
-        }), 502
+        return jsonify({"error": "上游返回非 JSON", "raw": resp.text[:500]}), 502
 
+    # 归一化：前端用 data.link
     if isinstance(data, dict):
-        link = data.get("url") or data.get("stripe_hosted_url") or data.get("checkout_url") or data.get("link")
+        links = data.get("links") or {}
+        link = (
+            data.get("link")
+            or links.get("stripe_external")
+            or links.get("openai_full")
+            or ""
+        )
         if link:
             data["link"] = link
-        data.setdefault("checkout_payload", checkout_payload)
 
     return jsonify(data), resp.status_code
 
@@ -175,5 +78,5 @@ def api_generate():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8787))
     print(f"→ http://127.0.0.1:{port}/")
-    print(f"→ checkout: {CHECKOUT_URL}")
+    print(f"→ 上游: {UPSTREAM}")
     app.run(host="0.0.0.0", port=port, debug=False)
