@@ -586,6 +586,15 @@
   </div>
 
   <div class="card">
+    <div class="card-title">ChatGPT Cookie <span class="tag">建议</span></div>
+    <label>粘贴 chatgpt.com 请求里的 Cookie 请求头</label>
+    <textarea id="chatgpt_cookie" placeholder='__Secure-next-auth.session-token=...; oai-did=...; cf_clearance=...'></textarea>
+    <p class="help-text">
+      油猴脚本的 <code>credentials: include</code> 会自动携带这些 Cookie；独立网页需要手动补上，生成结果才更接近油猴。
+    </p>
+  </div>
+
+  <div class="card">
     <div class="card-title">支付配置</div>
 
     <div class="payment-section manual">
@@ -695,6 +704,7 @@ async function generate(options = {}) {
 
   const payload = {
     token,
+    chatgpt_cookie: document.getElementById('chatgpt_cookie').value.trim(),
     billing_country: document.getElementById('billing_country').value,
     billing_currency: document.getElementById('billing_currency').value,
     checkout_payload: buildCheckoutPayload(),
@@ -925,7 +935,7 @@ function escapeAttr(s) {
   return String(s).replace(/[\\']/g, m => m === '\\' ? '\\\\' : "\\'");
 }
 
-const SAVE_FIELDS = ['token', 'proxy', 'billing_country', 'billing_currency'];
+const SAVE_FIELDS = ['token', 'chatgpt_cookie', 'proxy', 'billing_country', 'billing_currency'];
 function saveAll() {
   const d = {};
   SAVE_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) d[id] = el.value; });

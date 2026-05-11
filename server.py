@@ -91,6 +91,15 @@ def extract_token(raw):
     return raw
 
 
+def normalize_cookie(raw):
+    if not isinstance(raw, str):
+        return ""
+    raw = raw.strip()
+    if raw.lower().startswith("cookie:"):
+        raw = raw.split(":", 1)[1].strip()
+    return raw
+
+
 def checkout_payload_from(body):
     payload = body.get("checkout_payload")
     if isinstance(payload, dict):
@@ -117,23 +126,27 @@ def api_generate():
     if not token:
         return jsonify({"error": "缺少 Access Token"}), 400
 
+    chatgpt_cookie = normalize_cookie(body.get("chatgpt_cookie", ""))
     checkout_payload = checkout_payload_from(body)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Origin": "https://chatgpt.com",
+        "Referer": "https://chatgpt.com/",
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/147.0.0.0 Safari/537.36"
+        ),
+    }
+    if chatgpt_cookie:
+        headers["Cookie"] = chatgpt_cookie
 
     try:
         resp = requests.post(
             CHECKOUT_URL,
             json=checkout_payload,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-                "Origin": "https://chatgpt.com",
-                "Referer": "https://chatgpt.com/",
-                "User-Agent": (
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/147.0.0.0 Safari/537.36"
-                ),
-            },
+            headers=headers,
             timeout=40,
         )
     except requests.RequestException as e:
@@ -142,7 +155,13 @@ def api_generate():
     try:
         data = resp.json()
     except ValueError:
-        return jsonify({"error": "ChatGPT checkout 返回非 JSON", "raw": resp.text[:500]}), 502
+        return jsonify({
+            "error": "ChatGPT checkout 返回非 JSON",
+            "status": resp.status_code,
+            "content_type": resp.headers.get("content-type", ""),
+            "raw": resp.text[:500],
+            "hint": "油猴脚本会随 credentials: include 自动带上 ChatGPT Cookie；独立网页需要额外粘贴同浏览器的 Cookie。",
+        }), 502
 
     if isinstance(data, dict):
         link = data.get("url") or data.get("stripe_hosted_url") or data.get("checkout_url") or data.get("link")
