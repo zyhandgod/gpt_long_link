@@ -217,6 +217,47 @@
   .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(0,185,107,0.2); }
   .btn-primary:disabled { background: #a8e6c3; box-shadow: none; cursor: not-allowed; transform: none; }
 
+
+  .plugin-card {
+    background: linear-gradient(135deg, #fffaf1 0%, #effbf4 100%);
+    border-color: rgba(0,185,107,0.22);
+  }
+  .plugin-intro {
+    font-size: 13px;
+    color: var(--gray-7);
+    margin-bottom: 14px;
+  }
+  .plugin-steps {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0;
+    color: var(--gray-8);
+    font-size: 13px;
+  }
+  .plugin-steps span {
+    display: block;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-3);
+    border-radius: 8px;
+    background: rgba(255,255,255,.72);
+  }
+  .plugin-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--green);
+    border: 1px solid var(--green-border);
+    text-decoration: none;
+  }
+  .btn-secondary:hover {
+    background: var(--green-bg);
+    transform: translateY(-1px);
+  }
+
   .payment-section {
     padding: 16px;
     border: 1px solid var(--gray-3);
@@ -448,8 +489,25 @@
 <div class="container">
   <div class="page-title">
     <h1>ChatGPT Plus 支付链接生成</h1>
-    <p>不用油猴，粘贴 Token 后直接在本页面生成 Stripe 订阅支付链接</p>
+    <p>推荐安装油猴插件，在 ChatGPT 页面内执行原版生成逻辑</p>
     <div class="divider"></div>
+  </div>
+
+  <div class="card plugin-card">
+    <div class="card-title">油猴插件 <span class="tag">推荐</span></div>
+    <p class="plugin-intro">
+      这个方式会直接在 <code>chatgpt.com</code> 页面内执行 <code>a.txt</code> 的原版逻辑，浏览器会自动携带 ChatGPT 登录态，和油猴代码生成结果一致。
+    </p>
+    <div class="plugin-steps">
+      <span>1. 先安装 Tampermonkey / 篡改猴浏览器扩展。</span>
+      <span>2. 点击下面「安装油猴插件」，确认安装脚本。</span>
+      <span>3. 打开 ChatGPT 页面，右上角会出现快捷支付面板，直接执行生成。</span>
+    </div>
+    <div class="plugin-actions">
+      <a class="btn btn-primary" href="/chatgpt-long-link.user.js">安装油猴插件</a>
+      <a class="btn btn-secondary" href="https://chatgpt.com/" target="_blank" rel="noreferrer">打开 ChatGPT 执行</a>
+    </div>
+    <p class="notice">如果点击安装没有弹出安装页，请先确认 Tampermonkey 已启用。</p>
   </div>
 
   <div class="card">
@@ -464,26 +522,12 @@
   <div class="card">
     <div class="card-title">支付配置</div>
 
-    <div class="payment-section">
-      <div class="section-head">
-        <div class="section-title">方式一：快捷方案</div>
-        <span class="section-badge">点击即生成</span>
-      </div>
-      <p class="section-desc">粘贴 Token 后，直接选择常用方案，会自动匹配国家和货币并开始生成。</p>
-      <div class="quick-plans">
-        <button class="quick-plan" type="button" onclick="setPlan('ID','IDR', true)">GoPay 印尼</button>
-        <button class="quick-plan" type="button" onclick="setPlan('DE','EUR', true)">PayPal 德国</button>
-        <button class="quick-plan" type="button" onclick="setPlan('FR','EUR', true)">PayPal 欧区</button>
-        <button class="quick-plan" type="button" onclick="setPlan('GB','GBP', true)">PayPal 英国</button>
-      </div>
-    </div>
-
     <div class="payment-section manual">
       <div class="section-head">
-        <div class="section-title">方式二：手动配置</div>
+        <div class="section-title">网页生成（备用）</div>
         <span class="section-badge">底部按钮生成</span>
       </div>
-      <p class="section-desc">需要自定义地区时，在这里选择账单国家和货币，然后点击页面底部「生成支付链接」。</p>
+      <p class="section-desc">如果不用插件，可粘贴 Token 后在这里选择账单国家和货币，然后点击页面底部「生成支付链接」。</p>
       <div class="row">
         <div>
           <label>账单国家</label>
@@ -513,7 +557,7 @@
 
     <label style="display:none;">代理 (可选)</label>
     <input type="text" id="proxy" style="display:none;" placeholder="socks5://127.0.0.1:18899 或留空直连">
-    <p class="notice">浏览器限制下，本站不能自动读取 chatgpt.com 登录态，请先粘贴 Token。</p>
+    <p class="notice">推荐优先使用上方油猴插件；网页生成仅作为备用方式。</p>
   </div>
 
   <button class="btn btn-primary" id="genBtn" onclick="generate()">
