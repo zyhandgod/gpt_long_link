@@ -218,35 +218,107 @@
   .btn-primary:disabled { background: #a8e6c3; box-shadow: none; cursor: not-allowed; transform: none; }
 
 
-  .plugin-card {
-    background: linear-gradient(135deg, #fffaf1 0%, #effbf4 100%);
+  .console-card {
+    padding: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, #fffaf1 0%, #f4f8ef 100%);
     border-color: rgba(0,185,107,0.22);
   }
-  .plugin-intro {
-    font-size: 13px;
+  .console-head {
+    padding: 18px 20px 16px;
+    background: linear-gradient(135deg, #fff7e8 0%, #e5f7e9 100%);
+    border-bottom: 1px solid rgba(0,185,107,0.12);
+  }
+  .console-kicker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: rgba(31,41,55,0.58);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .console-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    text-transform: none;
+  }
+  .console-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 4px rgba(0,185,107,0.14);
+  }
+  .console-status-dot.busy { background: #f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,0.16); }
+  .console-status-dot.error { background: var(--red); box-shadow: 0 0 0 4px rgba(255,77,79,0.16); }
+  .console-title {
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--gray-9);
+  }
+  .console-subtitle {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--gray-7);
-    margin-bottom: 14px;
   }
-  .plugin-steps {
+  .console-body {
+    padding: 14px;
     display: grid;
-    gap: 8px;
-    margin: 12px 0;
-    color: var(--gray-8);
-    font-size: 13px;
-  }
-  .plugin-steps span {
-    display: block;
-    padding: 8px 10px;
-    border: 1px solid var(--gray-3);
-    border-radius: 8px;
-    background: rgba(255,255,255,.72);
-  }
-  .plugin-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-top: 12px;
   }
+  .console-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+  .console-action {
+    min-width: 0;
+    min-height: 56px;
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    color: var(--gray-9);
+    background: #fffaf1;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 7px 18px rgba(77,63,36,0.1);
+    font-family: var(--font);
+    transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+  }
+  .console-action:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(77,63,36,0.14); }
+  .console-action:disabled { cursor: progress; opacity: .65; transform: none; }
+  .console-action.primary {
+    grid-column: 1 / -1;
+    min-height: 76px;
+    color: #061a12;
+    background: linear-gradient(135deg, #44e19e, #19b978);
+  }
+  .console-action.paypal { background: linear-gradient(135deg,#dcecff,#b9d6ff); color: #13233f; }
+  .console-action.token { background: linear-gradient(135deg,#ece6ff,#d6ccff); color: #20184b; }
+  .console-icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: rgba(255,255,255,0.52);
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .console-action.primary .console-icon { width: 42px; height: 42px; font-size: 16px; background: rgba(6,26,18,0.12); }
+  .console-copy { min-width: 0; display: grid; gap: 2px; }
+  .console-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 800; }
+  .console-action.primary .console-label { font-size: 16px; }
+  .console-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(31,41,55,0.58); font-size: 11px; font-weight: 650; }
   .btn-secondary {
     background: var(--white);
     color: var(--green);
@@ -291,31 +363,6 @@
     color: var(--gray-7);
     margin: -4px 0 12px;
   }
-  .quick-plans {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    margin: 2px 0 0;
-  }
-  .quick-plan {
-    border: 1px solid var(--gray-3);
-    background: var(--white);
-    color: var(--gray-8);
-    border-radius: 8px;
-    padding: 9px 8px;
-    font-family: var(--font);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .2s;
-  }
-  .quick-plan:hover {
-    border-color: var(--green);
-    color: var(--green);
-    background: var(--green-bg);
-    transform: translateY(-1px);
-  }
-
   .result-card {
     display: none;
     background: var(--white);
@@ -466,6 +513,7 @@
 
   @media (max-width: 560px) {
     .row { flex-direction: column; gap: 0; }
+    .console-actions { grid-template-columns: 1fr; }
     .link-block-header { flex-direction: column; align-items: flex-start; gap: 8px; }
     .link-actions { width: 100%; }
     .link-actions .copy-btn { flex: 1; justify-content: center; }
@@ -489,25 +537,43 @@
 <div class="container">
   <div class="page-title">
     <h1>ChatGPT Plus 支付链接生成</h1>
-    <p>推荐安装油猴插件，在 ChatGPT 页面内执行原版生成逻辑</p>
+    <p>内置快捷支付面板，复刻原油猴脚本的 GoPay、PayPal 和 Token 功能</p>
     <div class="divider"></div>
   </div>
 
-  <div class="card plugin-card">
-    <div class="card-title">油猴插件 <span class="tag">推荐</span></div>
-    <p class="plugin-intro">
-      这个方式会直接在 <code>chatgpt.com</code> 页面内执行 <code>a.txt</code> 的原版逻辑，浏览器会自动携带 ChatGPT 登录态，和油猴代码生成结果一致。
-    </p>
-    <div class="plugin-steps">
-      <span>1. 先安装 Tampermonkey / 篡改猴浏览器扩展。</span>
-      <span>2. 点击下面「安装油猴插件」，确认安装脚本。</span>
-      <span>3. 打开 ChatGPT 页面，右上角会出现快捷支付面板，直接执行生成。</span>
+  <div class="card console-card">
+    <div class="console-head">
+      <div class="console-kicker">
+        <span>Checkout Console</span>
+        <span class="console-status"><span id="panelStatusText">就绪</span><span id="panelStatusDot" class="console-status-dot"></span></span>
+      </div>
+      <div class="console-title">快捷支付中枢</div>
+      <div class="console-subtitle">支付和 Token 集中处理，按钮行为对齐油猴脚本</div>
     </div>
-    <div class="plugin-actions">
-      <a class="btn btn-primary" href="/chatgpt-long-link.user.js">安装油猴插件</a>
-      <a class="btn btn-secondary" href="https://chatgpt.com/" target="_blank" rel="noreferrer">打开 ChatGPT 执行</a>
+    <div class="console-body">
+      <div class="console-actions">
+        <button class="console-action primary" type="button" onclick="quickGenerate('ID', 'IDR', 'GoPay')">
+          <span class="console-icon">GP</span>
+          <span class="console-copy"><span class="console-label">GoPay 支付</span><span class="console-meta">印尼 IDR 方案</span></span>
+        </button>
+        <button class="console-action paypal" type="button" onclick="quickGenerate('DE', 'EUR', 'PayPal-DE')">
+          <span class="console-icon">P</span>
+          <span class="console-copy"><span class="console-label">PayPal</span><span class="console-meta">德国 EUR</span></span>
+        </button>
+        <button class="console-action paypal" type="button" onclick="quickGenerate('FR', 'EUR', 'PayPal-EU')">
+          <span class="console-icon">P</span>
+          <span class="console-copy"><span class="console-label">PayPal</span><span class="console-meta">欧区 EUR</span></span>
+        </button>
+        <button class="console-action paypal" type="button" onclick="quickGenerate('GB', 'GBP', 'PayPal-UK')">
+          <span class="console-icon">P</span>
+          <span class="console-copy"><span class="console-label">PayPal</span><span class="console-meta">英国 GBP</span></span>
+        </button>
+        <button class="console-action token" type="button" onclick="copyAccessToken()">
+          <span class="console-icon">TK</span>
+          <span class="console-copy"><span class="console-label">Token</span><span class="console-meta">复制登录凭证</span></span>
+        </button>
+      </div>
     </div>
-    <p class="notice">如果点击安装没有弹出安装页，请先确认 Tampermonkey 已启用。</p>
   </div>
 
   <div class="card">
@@ -524,10 +590,10 @@
 
     <div class="payment-section manual">
       <div class="section-head">
-        <div class="section-title">网页生成（备用）</div>
-        <span class="section-badge">底部按钮生成</span>
+        <div class="section-title">手动账单配置</div>
+        <span class="section-badge">自定义生成</span>
       </div>
-      <p class="section-desc">如果不用插件，可粘贴 Token 后在这里选择账单国家和货币，然后点击页面底部「生成支付链接」。</p>
+      <p class="section-desc">上方快捷按钮会自动切换对应国家和货币；也可以在这里手动选择后点击页面底部「生成支付链接」。</p>
       <div class="row">
         <div>
           <label>账单国家</label>
@@ -557,7 +623,7 @@
 
     <label style="display:none;">代理 (可选)</label>
     <input type="text" id="proxy" style="display:none;" placeholder="socks5://127.0.0.1:18899 或留空直连">
-    <p class="notice">推荐优先使用上方油猴插件；网页生成仅作为备用方式。</p>
+    <p class="notice">独立网页无法跨域自动读取 ChatGPT 登录态，请先粘贴 Access Token 或 Session JSON；之后快捷按钮会按油猴脚本同款方案生成、复制并跳转。</p>
   </div>
 
   <button class="btn btn-primary" id="genBtn" onclick="generate()">
@@ -578,7 +644,7 @@ const API_BASE = '';
 const DEMO_MODE = false;
 
 async function generate(options = {}) {
-  const token = document.getElementById('token').value.trim();
+  const token = getAccessTokenInput();
   const redirectOnSuccess = Boolean(options.redirectOnSuccess);
   const label = options.label || '支付链接';
 
@@ -591,6 +657,8 @@ async function generate(options = {}) {
   const btn = document.getElementById('genBtn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> 生成中...';
+  setConsoleBusy(true);
+  setPanelStatus(`${label} 生成中`, 'busy');
 
   const resultCard = document.getElementById('resultCard');
   resultCard.classList.remove('active', 'error');
@@ -627,20 +695,68 @@ async function generate(options = {}) {
       const url = getPrimaryLink(data);
       if (!url) throw new Error('未找到可跳转的支付链接');
       await copyRawText(url);
-      showToast('长链接已复制，正在跳转...');
-      setTimeout(() => { location.assign(url); }, 650);
+      setPanelStatus('链接生成成功', 'ok');
+      showToast('长链接已复制，正在打开新页面...');
+      setTimeout(() => { window.open(url, '_blank', 'noopener,noreferrer'); }, 650);
       return;
     }
 
+    setPanelStatus('链接生成成功', 'ok');
     showLinks(data);
   } catch (e) {
     const msg = e.message || String(e);
+    setPanelStatus('支付链接失败', 'error');
     if (redirectOnSuccess) showToast(msg, true);
     else showError(msg);
   } finally {
     btn.disabled = false;
     btn.textContent = '生成支付链接';
+    setConsoleBusy(false);
   }
+}
+
+function setPanelStatus(text, state = 'ok') {
+  const statusText = document.getElementById('panelStatusText');
+  const statusDot = document.getElementById('panelStatusDot');
+  if (statusText) statusText.textContent = text;
+  if (statusDot) {
+    statusDot.classList.remove('busy', 'error');
+    if (state === 'busy' || state === 'error') statusDot.classList.add(state);
+  }
+}
+
+function setConsoleBusy(on) {
+  document.querySelectorAll('.console-action').forEach(btn => {
+    if (!btn.classList.contains('token')) btn.disabled = on;
+  });
+}
+
+function getAccessTokenInput() {
+  const raw = document.getElementById('token').value.trim();
+  if (!raw) return '';
+  try {
+    const data = JSON.parse(raw);
+    return data.accessToken || data.token || raw;
+  } catch (_) {
+    return raw;
+  }
+}
+
+async function copyAccessToken() {
+  const token = getAccessTokenInput();
+  if (!token) {
+    setPanelStatus('Token 获取失败', 'error');
+    showToast('请先粘贴 Access Token 或 Session JSON', true);
+    return;
+  }
+  await copyRawText(token);
+  setPanelStatus('Token 已复制', 'ok');
+  showToast('AccessToken 已复制到剪贴板');
+}
+
+function quickGenerate(country, currency, label) {
+  setPlan(country, currency, false);
+  generate({ redirectOnSuccess: true, label });
 }
 
 function buildDemoResponse(payload) {

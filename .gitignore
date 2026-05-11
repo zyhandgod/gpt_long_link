@@ -6,6 +6,10 @@ venv/
 .DS_Store
 .vscode/
 *.log
+.pip-cache/
+.pythonlibs/
+run-local.cmd
+run_local.py
 
 # 临时/敏感文件
 *.tmp
