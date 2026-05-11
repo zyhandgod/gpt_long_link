@@ -15,6 +15,11 @@
     "use strict";
 
     if (window.self !== window.top) return;
+    if (location.hostname !== "chatgpt.com") {
+        alert("请在 chatgpt.com 页面运行这个脚本。当前页面没有 ChatGPT 登录态，所以会 Failed to fetch。");
+        window.open("https://chatgpt.com/", "_blank");
+        return;
+    }
 
     const CONTAINER_ID = "gopay-container";
     const TIP_ID = "gopay-checkout-tip";
